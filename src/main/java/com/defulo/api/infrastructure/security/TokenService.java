@@ -13,6 +13,8 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
+import com.defulo.api.infrastructure.exception.InvalidTokenException;
+
 @Service
 public class TokenService {
 
@@ -36,7 +38,7 @@ public class TokenService {
                     .getBody();
             return claims.getSubject();
         } catch (Exception e) {
-            throw new RuntimeException("Token JWT inválido ou expirado!");
+            throw new InvalidTokenException("Token JWT inválido ou expirado!");
         }
     }
 

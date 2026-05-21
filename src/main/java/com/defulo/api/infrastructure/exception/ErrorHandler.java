@@ -124,4 +124,29 @@ public class ErrorHandler {
 
         return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
     }
+
+    // =====================================================
+    // TOKEN INVÁLIDO OU EXPIRADO
+    // =====================================================
+
+    /**
+     * Trata exceções de token JWT inválido ou expirado.
+     * Lançada quando o token no cabeçalho Authorization não é válido.
+     *
+     * @param ex a exceção de token inválido
+     * @return ResponseEntity com mensagem de erro e HTTP 401
+     */
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidTokenException(
+            InvalidTokenException ex) {
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.UNAUTHORIZED.value());
+        body.put("erro", "Token inválido ou expirado");
+        body.put("mensagem", ex.getMessage());
+
+        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
+    }
 }
+
