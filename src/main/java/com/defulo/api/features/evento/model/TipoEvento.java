@@ -1,4 +1,16 @@
 package com.defulo.api.features.evento.model;
 
-public class TipoEvento {
+/** define os tipos de atividades de manejo
+ *
+ */
+public enum TipoEvento {
+    IRRIGACAO,
+    ADUBACAO,
+    APLICACAO,
+    PLANTIO,
+    COLHEITA,
+
+
+
+
 }

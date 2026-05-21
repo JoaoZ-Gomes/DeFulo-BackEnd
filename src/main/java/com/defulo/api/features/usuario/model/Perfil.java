@@ -7,6 +7,8 @@ package com.defulo.api.features.usuario.model;
 public enum Perfil {
 
     ADM("Administrador"),
+    GESTOR("Gestor de Cooperativa"),
+    PREFEITURA("Prefeitura"),
     ENGENHEIRO("Engenheiro Agrônomo"),
     RTV("Representante Técnico de Vendas"),
     PRODUTOR("Produtor Rural");

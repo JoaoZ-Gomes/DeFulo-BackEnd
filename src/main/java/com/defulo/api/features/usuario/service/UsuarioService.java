@@ -13,6 +13,7 @@ import com.defulo.api.features.usuario.model.Usuario;
 import com.defulo.api.features.usuario.repository.UsuarioRepository;
 import com.defulo.api.infrastructure.exception.RecursoNaoEncontradoException;
 import com.defulo.api.infrastructure.exception.RegraDeNegocioException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,8 +28,7 @@ public class UsuarioService implements UsuarioIService {
 
     private final UsuarioRepository repository;
     private final UsuarioMapper mapper;
-
-    // TODO: Adicionar PasswordEncoder quando Spring Security estiver configurado
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UsuarioResponseDTO salvar(UsuarioCreateRequestDTO dto) {
@@ -41,9 +41,7 @@ public class UsuarioService implements UsuarioIService {
         }
 
         Usuario entity = mapper.toEntity(dto);
-        
-        // Aqui entraria a criptografia da senha
-        // entity.setSenha(passwordEncoder.encode(dto.senha()));
+        entity.setSenha(passwordEncoder.encode(dto.senha()));
 
         return mapper.toResponseDTO(repository.save(entity));
     }
