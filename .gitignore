@@ -31,3 +31,5 @@ build/
 
 ### VS Code ###
 .vscode/
+ANALISE_ERROS_FALTANTES.md
+GUIA_SWAGGER.md

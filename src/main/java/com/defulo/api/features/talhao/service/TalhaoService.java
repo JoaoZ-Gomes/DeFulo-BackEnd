@@ -10,6 +10,7 @@ import com.defulo.api.features.talhao.model.Talhao;
 import com.defulo.api.features.talhao.repository.TalhaoRepository;
 import com.defulo.api.infrastructure.exception.RecursoNaoEncontradoException;
 import com.defulo.api.infrastructure.exception.RegraDeNegocioException;
+import com.defulo.api.infrastructure.security.AuthorizationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,14 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/**
- * Serviço de Talhão com regras de negócio.
- *
- * Regras:
- *  - A fazenda deve existir ao criar um talhão.
- *  - O número do talhão deve ser único dentro da mesma fazenda.
- *  - Apenas campos não-nulos são aplicados na atualização.
- */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -34,17 +27,17 @@ public class TalhaoService {
     private final TalhaoRepository talhaoRepository;
     private final FazendaRepository fazendaRepository;
     private final TalhaoMapper mapper;
-
-    // ─── CREATE ──────────────────────────────────────────────────────────────
+    private final AuthorizationService authorizationService;
 
     public TalhaoResponseDTO criar(TalhaoCreateRequestDTO dto) {
-        Fazenda fazenda = fazendaRepository.findById(dto.fazendaId())
-                .orElseThrow(() -> new RecursoNaoEncontradoException(
-                        "Fazenda não encontrada com o ID: " + dto.fazendaId()));
+        authorizationService.exigirPodeGerenciarTalhao();
+
+        Fazenda fazenda = buscarFazenda(dto.fazendaId());
+        authorizationService.exigirAcessoAFazenda(fazenda);
 
         if (talhaoRepository.existsByNumeroAndFazendaId(dto.numero(), dto.fazendaId())) {
             throw new RegraDeNegocioException(
-                    "Já existe um talhão com o número '" + dto.numero() + "' nesta fazenda.");
+                    "Ja existe um talhao com o numero '" + dto.numero() + "' nesta fazenda.");
         }
 
         Talhao talhao = new Talhao();
@@ -58,20 +51,18 @@ public class TalhaoService {
         return mapper.toResponseDTO(talhaoRepository.save(talhao));
     }
 
-    // ─── READ ─────────────────────────────────────────────────────────────────
-
     @Transactional(readOnly = true)
     public TalhaoResponseDTO buscarPorId(Long id) {
-        return talhaoRepository.findById(id)
-                .map(mapper::toResponseDTO)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Talhão não encontrado com o ID: " + id));
+        Talhao talhao = buscarEntidade(id);
+        authorizationService.exigirAcessoATalhao(talhao);
+        return mapper.toResponseDTO(talhao);
     }
 
     @Transactional(readOnly = true)
     public List<TalhaoResponseDTO> listarPorFazenda(Long fazendaId) {
-        if (!fazendaRepository.existsById(fazendaId)) {
-            throw new RecursoNaoEncontradoException("Fazenda não encontrada com o ID: " + fazendaId);
-        }
+        Fazenda fazenda = buscarFazenda(fazendaId);
+        authorizationService.exigirAcessoAFazenda(fazenda);
+
         return talhaoRepository.findByFazendaId(fazendaId).stream()
                 .map(mapper::toResponseDTO)
                 .toList();
@@ -79,39 +70,56 @@ public class TalhaoService {
 
     @Transactional(readOnly = true)
     public Page<TalhaoResponseDTO> listarPorFazendaPaginado(Long fazendaId, Pageable pageable) {
-        if (!fazendaRepository.existsById(fazendaId)) {
-            throw new RecursoNaoEncontradoException("Fazenda não encontrada com o ID: " + fazendaId);
-        }
+        Fazenda fazenda = buscarFazenda(fazendaId);
+        authorizationService.exigirAcessoAFazenda(fazenda);
+
         return talhaoRepository.findByFazendaId(fazendaId, pageable).map(mapper::toResponseDTO);
     }
 
-    // ─── UPDATE ───────────────────────────────────────────────────────────────
-
     public TalhaoResponseDTO atualizar(Long id, TalhaoUpdateRequestDTO dto) {
-        Talhao talhao = talhaoRepository.findById(id)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Talhão não encontrado com o ID: " + id));
+        authorizationService.exigirPodeGerenciarTalhao();
+
+        Talhao talhao = buscarEntidade(id);
+        authorizationService.exigirAcessoATalhao(talhao);
 
         if (dto.numero() != null && !dto.numero().equals(talhao.getNumero())) {
             if (talhaoRepository.existsByNumeroAndFazendaId(dto.numero(), talhao.getFazenda().getId())) {
                 throw new RegraDeNegocioException(
-                        "Já existe um talhão com o número '" + dto.numero() + "' nesta fazenda.");
+                        "Ja existe um talhao com o numero '" + dto.numero() + "' nesta fazenda.");
             }
             talhao.setNumero(dto.numero());
         }
-        if (dto.area()                 != null) talhao.setArea(dto.area());
-        if (dto.cultura()              != null) talhao.setCultura(dto.cultura());
-        if (dto.dataPlantio()          != null) talhao.setDataPlantio(dto.dataPlantio());
-        if (dto.limiteCriticoUmidade() != null) talhao.setLimiteCriticoUmidade(dto.limiteCriticoUmidade());
+        if (dto.area() != null) {
+            talhao.setArea(dto.area());
+        }
+        if (dto.cultura() != null) {
+            talhao.setCultura(dto.cultura());
+        }
+        if (dto.dataPlantio() != null) {
+            talhao.setDataPlantio(dto.dataPlantio());
+        }
+        if (dto.limiteCriticoUmidade() != null) {
+            talhao.setLimiteCriticoUmidade(dto.limiteCriticoUmidade());
+        }
 
         return mapper.toResponseDTO(talhaoRepository.save(talhao));
     }
 
-    // ─── DELETE ───────────────────────────────────────────────────────────────
-
     public void excluir(Long id) {
-        if (!talhaoRepository.existsById(id)) {
-            throw new RecursoNaoEncontradoException("Talhão não encontrado com o ID: " + id);
-        }
-        talhaoRepository.deleteById(id);
+        authorizationService.exigirPodeGerenciarTalhao();
+
+        Talhao talhao = buscarEntidade(id);
+        authorizationService.exigirAcessoATalhao(talhao);
+        talhaoRepository.delete(talhao);
+    }
+
+    private Fazenda buscarFazenda(Long id) {
+        return fazendaRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Fazenda nao encontrada com o ID: " + id));
+    }
+
+    private Talhao buscarEntidade(Long id) {
+        return talhaoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Talhao nao encontrado com o ID: " + id));
     }
 }
