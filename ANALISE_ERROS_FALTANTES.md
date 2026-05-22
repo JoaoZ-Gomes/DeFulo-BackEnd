@@ -603,7 +603,7 @@ Faltam transações distribuídas / saga pattern.
 ## 6. CHECKLIST DE CORREÇÕES PRIORITÁRIAS
 
 ### CRÍTICAS (Fazer agora)
-- [ ] 🔴 Mover credenciais para variáveis de ambiente
+- [x] 🔴 Mover credenciais para variáveis de ambiente
 - [ ] 🔴 Implementar autorização por perfil em todos serviços
 - [ ] 🔴 Criar tratamento de token inválido (InvalidTokenException)
 - [ ] 🔴 Criar método para obter usuário autenticado
