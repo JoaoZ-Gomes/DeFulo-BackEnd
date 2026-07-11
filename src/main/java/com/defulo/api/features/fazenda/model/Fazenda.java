@@ -1,5 +1,6 @@
 package com.defulo.api.features.fazenda.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.defulo.api.features.produtor.model.Produtor;
@@ -14,6 +15,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+
+
 public class Fazenda {
 
     @Id
@@ -24,7 +27,7 @@ public class Fazenda {
     private String nome;
 
     @Column(nullable = false)
-    private Double areaTotal;
+    private BigDecimal  areaTotal;
 
     @Column(nullable = false, length = 50)
     private String cultura;

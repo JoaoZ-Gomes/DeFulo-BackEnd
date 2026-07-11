@@ -3,6 +3,8 @@ package com.defulo.api.features.fazenda.dto.request;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
+import java.math.BigDecimal;
+
 /**
  * DTO de atualização de Fazenda.
  * Todos os campos são opcionais — apenas os não-nulos serão aplicados.
@@ -13,7 +15,7 @@ public record FazendaUpdateRequestDTO(
         String nome,
 
         @Positive(message = "A área total deve ser um valor positivo.")
-        Double areaTotal,
+        BigDecimal areaTotal,
 
         @Size(max = 50, message = "A cultura deve ter no máximo 50 caracteres.")
         String cultura

@@ -13,6 +13,7 @@ import com.defulo.api.features.fazenda.repository.FazendaRepository;
 import com.defulo.api.features.produtor.model.Produtor;
 import com.defulo.api.features.talhao.model.Talhao;
 import com.defulo.api.features.talhao.repository.TalhaoRepository;
+import java.math.BigDecimal;
 
 import java.time.LocalDate;
 
@@ -50,7 +51,7 @@ public class DataInitializer {
 
                 Fazenda fazenda = new Fazenda();
                 fazenda.setNome("Fazenda Boa Vista");
-                fazenda.setAreaTotal(150.0);
+                fazenda.setAreaTotal(BigDecimal.valueOf(150.0));
                 fazenda.setCultura("Soja");
                 fazenda.setProdutor(produtor);
                 fazenda = fazendaRepository.save(fazenda);
