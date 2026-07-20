@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
+import java.math.BigDecimal;
+
 /**
  * DTO de entrada para criação de Fazenda.
  * produtorId vincula a fazenda ao produtor dono.
@@ -17,7 +19,7 @@ public record FazendaCreateRequestDTO(
 
         @NotNull(message = "A área total é obrigatória.")
         @Positive(message = "A área total deve ser um valor positivo.")
-        Double areaTotal,
+        BigDecimal areaTotal,
 
         @NotBlank(message = "A cultura é obrigatória.")
         @Size(max = 50, message = "A cultura deve ter no máximo 50 caracteres.")

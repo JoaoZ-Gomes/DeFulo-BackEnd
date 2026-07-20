@@ -1,5 +1,6 @@
 package com.defulo.api.features.fazenda.dto.response;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -9,7 +10,7 @@ import java.time.LocalDateTime;
 public record FazendaResponseDTO(
         Long id,
         String nome,
-        Double areaTotal,
+        BigDecimal areaTotal,
         String cultura,
         Long produtorId,
         String nomeProdutor,
