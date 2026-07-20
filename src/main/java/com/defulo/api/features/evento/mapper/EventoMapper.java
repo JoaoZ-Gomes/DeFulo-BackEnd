@@ -20,23 +20,24 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 public interface EventoMapper {
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "data", ignore = true)      // definido pelo service: LocalDateTime.now()
-    @Mapping(target = "talhao", ignore = true)    // lookup por talhaoId feito no service
-    @Mapping(target = "rtv", ignore = true)       // RTV vem do usuário autenticado (futuro)
+    @Mapping(target = "data", ignore = true)          // definido pelo service: LocalDateTime.now()
+    @Mapping(target = "talhao", ignore = true)        // lookup por talhaoId feito no service
+    @Mapping(target = "rtv", ignore = true)           // RTV vem do usuário autenticado
+    @Mapping(target = "dataAtualizacao", ignore = true)
     EventoManejo toEntity(EventoCreateRequestDto dto);
 
-    @Mapping(target = "talhaoId",     source = "talhao.id")
-    @Mapping(target = "talhaoNumero", source = "talhao.numero")
-    @Mapping(target = "rtvId",        source = "rtv.id")
-    @Mapping(target = "rtvNome",      source = "rtv.nome")
+    @Mapping(target = "talhaoId",        source = "talhao.id")
+    @Mapping(target = "talhaoNumero",    source = "talhao.numero")
+    @Mapping(target = "rtvId",           source = "rtv.id")
+    @Mapping(target = "rtvNome",         source = "rtv.nome")
     EventoResponseDTO toResponseDTO(EventoManejo entity);
 
-    /** Atualização parcial: apenas nome e descrição são mutáveis. */
-    @Mapping(target = "id",          ignore = true)
-    @Mapping(target = "data",        ignore = true)
-    @Mapping(target = "tipo",        ignore = true)
-    @Mapping(target = "quantidade",  ignore = true)
-    @Mapping(target = "talhao",      ignore = true)
-    @Mapping(target = "rtv",         ignore = true)
+    /** Atualização parcial: apenas nome, descrição e quantidade são mutáveis. */
+    @Mapping(target = "id",                ignore = true)
+    @Mapping(target = "data",              ignore = true)
+    @Mapping(target = "tipo",              ignore = true)
+    @Mapping(target = "talhao",            ignore = true)
+    @Mapping(target = "rtv",              ignore = true)
+    @Mapping(target = "dataAtualizacao",  ignore = true)
     void updateEntityFromDTO(EventoUpdateDTO dto, @MappingTarget EventoManejo entity);
 }

@@ -36,8 +36,17 @@ public class Fazenda {
     @Column(name = "data_criacao", nullable = false, updatable = false)
     private LocalDateTime dataCriacao;
 
+    @Column(name = "data_atualizacao")
+    private LocalDateTime dataAtualizacao;
+
     @PrePersist
     protected void onCreate() {
         this.dataCriacao = LocalDateTime.now();
+        this.dataAtualizacao = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.dataAtualizacao = LocalDateTime.now();
     }
 }

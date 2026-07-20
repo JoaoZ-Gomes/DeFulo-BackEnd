@@ -14,7 +14,9 @@ public record EventoResponseDTO(
         String descricao,
         LocalDateTime data,
         TipoEvento tipo,
-        String quantidade,
+
+        Double quantidadeValor,
+        String quantidadeUnidade,
 
         Long talhaoId,
         String talhaoNumero,

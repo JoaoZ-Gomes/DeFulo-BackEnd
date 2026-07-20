@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -162,5 +163,38 @@ public class ErrorHandler {
 
         return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
     }
-}
 
+    // =====================================================
+    // INTEGRIDADE DO BANCO DE DADOS
+    // =====================================================
+
+    /**
+     * Trata erros de integridade referencial ou restrições únicas do banco.
+     * Exemplos: email duplicado capturado no nível do DB, FK violada.
+     *
+     * @param ex a exceção de violação de integridade
+     * @return ResponseEntity com mensagem amigável e HTTP 409 (Conflict)
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(
+            DataIntegrityViolationException ex) {
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("erro", "Violação de integridade de dados");
+
+        String mensagem = "Operação violou uma restrição do banco de dados.";
+        String rootMsg = ex.getRootCause() != null ? ex.getRootCause().getMessage() : "";
+        if (rootMsg.contains("email")) {
+            mensagem = "Este e-mail já está em uso.";
+        } else if (rootMsg.contains("cpf")) {
+            mensagem = "Este CPF já está cadastrado.";
+        } else if (rootMsg.contains("uq_talhao_numero_fazenda")) {
+            mensagem = "Já existe um talhão com este número nesta fazenda.";
+        }
+        body.put("mensagem", mensagem);
+
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
+    }
+}

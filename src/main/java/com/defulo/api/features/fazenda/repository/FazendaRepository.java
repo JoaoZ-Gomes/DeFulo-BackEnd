@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface FazendaRepository extends JpaRepository<Fazenda, Long> {
@@ -17,4 +18,7 @@ public interface FazendaRepository extends JpaRepository<Fazenda, Long> {
 
     /** Verifica se o produtor já tem uma fazenda com o mesmo nome. */
     boolean existsByNomeAndProdutorId(String nome, Long produtorId);
+
+    /** Lista fazendas modificadas após um determinado momento (para pull sync incremental). */
+    List<Fazenda> findByDataAtualizacaoAfter(LocalDateTime since);
 }

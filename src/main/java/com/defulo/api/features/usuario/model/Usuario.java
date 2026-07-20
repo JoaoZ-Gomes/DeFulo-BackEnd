@@ -24,6 +24,7 @@ import lombok.ToString;
 @Table(name = "usuarios")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "tipo_usuario", discriminatorType = DiscriminatorType.STRING)
+@DiscriminatorValue("USUARIO")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
