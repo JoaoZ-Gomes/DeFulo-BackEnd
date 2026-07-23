@@ -79,4 +79,11 @@ public class AuthorizationService {
         }
         throw new AccessDeniedException("Você não tem permissão para gerenciar talhões.");
     }
+
+    public void exigirPerfil(Perfil perfil) {
+        Usuario usuario = getUsuarioAutenticado();
+        if (usuario.getPerfil() != perfil) {
+            throw new org.springframework.security.access.AccessDeniedException("Você não possui o perfil de acesso necessário: " + perfil.getDescricao());
+        }
+    }
 }

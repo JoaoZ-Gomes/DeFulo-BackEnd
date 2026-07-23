@@ -185,7 +185,7 @@ public class SyncService {
 
         Fazenda fazenda = new Fazenda();
         fazenda.setNome(getString(payload, "nome"));
-        fazenda.setAreaTotal(getDouble(payload, "areaTotal"));
+        fazenda.setAreaTotal(getBigDecimal(payload, "areaTotal"));
         fazenda.setCultura(getString(payload, "cultura"));
         fazenda.setProdutor(produtor);
 
@@ -249,7 +249,7 @@ public class SyncService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Fazenda não encontrada: " + id));
 
         if (payload.get("nome")      != null) fazenda.setNome(getString(payload, "nome"));
-        if (payload.get("areaTotal") != null) fazenda.setAreaTotal(getDouble(payload, "areaTotal"));
+        if (payload.get("areaTotal") != null) fazenda.setAreaTotal(getBigDecimal(payload, "areaTotal"));
         if (payload.get("cultura")   != null) fazenda.setCultura(getString(payload, "cultura"));
 
         return fazendaRepository.save(fazenda).getId();
@@ -492,5 +492,10 @@ public class SyncService {
         if (val == null) return null;
         if (val instanceof Number n) return n.doubleValue();
         return Double.parseDouble(val.toString());
+    }
+
+    private java.math.BigDecimal getBigDecimal(Map<String, Object> payload, String key) {
+        Double val = getDouble(payload, key);
+        return val != null ? java.math.BigDecimal.valueOf(val) : null;
     }
 }
