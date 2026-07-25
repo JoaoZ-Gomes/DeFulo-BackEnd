@@ -33,3 +33,6 @@ build/
 .vscode/
 ANALISE_ERROS_FALTANTES.md
 GUIA_SWAGGER.md
+
+### Armazenamento local de arquivos (app.storage.base-path) ###
+/storage/

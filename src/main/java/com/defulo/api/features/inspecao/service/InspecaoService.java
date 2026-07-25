@@ -12,6 +12,7 @@ import com.defulo.api.features.usuario.model.Perfil;
 import com.defulo.api.features.usuario.model.Usuario;
 import com.defulo.api.infrastructure.exception.RecursoNaoEncontradoException;
 import com.defulo.api.infrastructure.security.AuthorizationService;
+import com.defulo.api.infrastructure.storage.FileStorageService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +50,7 @@ public class InspecaoService {
     private final FazendaRepository fazendaRepository;
     private final AuthorizationService authorizationService;
     private final ObjectMapper objectMapper;
+    private final FileStorageService fileStorageService;
 
     // -------------------------------------------------------------------------
     // SYNC: Receber Lote de Inspeções do App Móvel
@@ -213,24 +215,19 @@ public class InspecaoService {
     // -------------------------------------------------------------------------
 
     /**
-     * Salva uma foto enviada em Base64 e retorna a URL de acesso.
+     * Salva uma foto enviada em Base64 em disco local e retorna a URL de acesso.
      *
-     * <p>Em produção: salvar no Amazon S3, Google Cloud Storage ou MinIO.
-     * Por ora, implementação stub que retorna uma URL fictícia.</p>
+     * <p>Nota: para múltiplas instâncias do backend atrás de um load balancer,
+     * trocar {@link FileStorageService} por um backend de objeto (S3/GCS/MinIO)
+     * mantendo a mesma assinatura.</p>
      *
      * @param base64  Foto codificada em Base64
      * @param localId UUID do laudo para nomear o arquivo
      * @return URL de acesso à foto
      */
     private String salvarFotoBase64(String base64, String localId) {
-        // TODO: Implementar upload real para S3/GCS/MinIO no sprint de evidências
-        // Exemplo de implementação futura:
-        // byte[] imageBytes = Base64.getDecoder().decode(base64);
-        // String fileName = "inspecao/" + localId + ".jpg";
-        // s3Service.upload(fileName, imageBytes);
-        // return s3Service.getPublicUrl(fileName);
-
-        log.info("📷 [Foto] Foto recebida para localId={} — upload para storage pendente", localId);
-        return "https://storage.defulo.com.br/fotos/inspecao/" + localId + ".jpg";
+        String url = fileStorageService.salvarImagemBase64(base64, "inspecoes", localId);
+        log.info("📷 [Foto] Foto salva para localId={} em {}", localId, url);
+        return url;
     }
 }
