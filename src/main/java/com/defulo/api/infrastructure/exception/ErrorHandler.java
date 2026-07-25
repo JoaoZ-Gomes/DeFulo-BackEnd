@@ -192,6 +192,15 @@ public class ErrorHandler {
             mensagem = "Este CPF já está cadastrado.";
         } else if (rootMsg.contains("uq_talhao_numero_fazenda")) {
             mensagem = "Já existe um talhão com este número nesta fazenda.";
+        } else if (rootMsg.contains("fk_fazenda_produtor")) {
+            mensagem = "Não é possível excluir: este produtor ainda possui fazendas cadastradas.";
+        } else if (rootMsg.contains("fk_talhao_fazenda")) {
+            mensagem = "Não é possível excluir: esta fazenda ainda possui talhões cadastrados.";
+        } else if (rootMsg.contains("fk_evento_talhao")) {
+            mensagem = "Não é possível excluir: este talhão ainda possui eventos de manejo registrados.";
+        } else if (rootMsg.contains("fk_inspecao_talhao") || rootMsg.contains("fk_inspecao_fazenda")
+                || rootMsg.contains("fk_inspecao_engenheiro")) {
+            mensagem = "Não é possível excluir: existem inspeções de campo vinculadas a este registro.";
         }
         body.put("mensagem", mensagem);
 

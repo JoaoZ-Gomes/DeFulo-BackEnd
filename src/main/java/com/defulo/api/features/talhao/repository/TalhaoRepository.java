@@ -19,6 +19,9 @@ public interface TalhaoRepository extends JpaRepository<Talhao, Long> {
     /** Verifica unicidade de número dentro da mesma fazenda. */
     boolean existsByNumeroAndFazendaId(String numero, Long fazendaId);
 
+    /** Conta quantos talhões uma fazenda possui — usado para bloquear exclusão com dependentes. */
+    long countByFazendaId(Long fazendaId);
+
     /** Lista talhões modificados após um determinado momento (para pull sync incremental). */
     List<Talhao> findByDataAtualizacaoAfter(LocalDateTime since);
 }

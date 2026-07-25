@@ -12,6 +12,7 @@ import com.defulo.api.features.produtor.dto.response.ProdutorResponseDTO;
 import com.defulo.api.features.produtor.mapper.ProdutorMapper;
 import com.defulo.api.features.produtor.model.Produtor;
 import com.defulo.api.features.produtor.repository.ProdutorRepository;
+import com.defulo.api.features.fazenda.repository.FazendaRepository;
 import com.defulo.api.features.usuario.repository.UsuarioRepository;
 import com.defulo.api.infrastructure.exception.RecursoNaoEncontradoException;
 import com.defulo.api.infrastructure.exception.RegraDeNegocioException;
@@ -34,6 +35,7 @@ public class ProdutorService {
 
     private final ProdutorRepository repository;
     private final UsuarioRepository usuarioRepository;
+    private final FazendaRepository fazendaRepository;
     private final ProdutorMapper mapper;
     private final PasswordEncoder passwordEncoder;
 
@@ -87,6 +89,14 @@ public class ProdutorService {
         if (!repository.existsById(id)) {
             throw new RecursoNaoEncontradoException("Produtor não encontrado com o ID: " + id);
         }
+
+        long totalFazendas = fazendaRepository.countByProdutorId(id);
+        if (totalFazendas > 0) {
+            throw new RegraDeNegocioException(
+                    "Não é possível excluir este produtor pois ele possui " + totalFazendas
+                            + " fazenda(s) cadastrada(s). Exclua ou transfira as fazendas primeiro.");
+        }
+
         repository.deleteById(id);
     }
 }

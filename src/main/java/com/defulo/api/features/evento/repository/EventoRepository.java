@@ -20,4 +20,7 @@ public interface EventoRepository extends JpaRepository<EventoManejo, Long> {
 
     /** Lista eventos modificados após um determinado momento (para pull sync incremental). */
     List<EventoManejo> findByDataAtualizacaoAfter(LocalDateTime since);
+
+    /** Conta quantos eventos de manejo um talhão possui — usado para bloquear exclusão com dependentes. */
+    long countByTalhaoId(Long talhaoId);
 }

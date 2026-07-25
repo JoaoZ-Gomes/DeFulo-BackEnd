@@ -34,6 +34,15 @@ public interface InspecaoRepository extends JpaRepository<InspecaoCampo, Long> {
      */
     Optional<InspecaoCampo> findByLocalId(String localId);
 
+    /** Conta inspeções vinculadas a um talhão — usado para bloquear exclusão com dependentes. */
+    long countByTalhaoId(Long talhaoId);
+
+    /** Conta inspeções vinculadas a uma fazenda — usado para bloquear exclusão com dependentes. */
+    long countByFazendaId(Long fazendaId);
+
+    /** Conta inspeções feitas por um engenheiro — usado para bloquear exclusão com dependentes. */
+    long countByEngenheiroId(Long engenheiroId);
+
     /**
      * Lista todas as inspeções de um talhão, ordenadas por data (mais recentes primeiro).
      *

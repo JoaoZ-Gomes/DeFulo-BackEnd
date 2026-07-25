@@ -6,6 +6,7 @@ import com.defulo.api.features.engenheiro.dto.response.EngenheiroResponseDTO;
 import com.defulo.api.features.engenheiro.mapper.EngenheiroMapper;
 import com.defulo.api.features.engenheiro.model.Engenheiro;
 import com.defulo.api.features.engenheiro.repository.EngenheiroRepository;
+import com.defulo.api.features.inspecao.repository.InspecaoRepository;
 import com.defulo.api.features.usuario.repository.UsuarioRepository;
 import com.defulo.api.infrastructure.exception.RecursoNaoEncontradoException;
 import com.defulo.api.infrastructure.exception.RegraDeNegocioException;
@@ -32,6 +33,7 @@ public class EngenheiroService implements IEngenheiroService {
 
     private final EngenheiroRepository engenheiroRepository;
     private final UsuarioRepository usuarioRepository;
+    private final InspecaoRepository inspecaoRepository;
     private final EngenheiroMapper mapper;
     private final PasswordEncoder passwordEncoder;
 
@@ -86,6 +88,14 @@ public class EngenheiroService implements IEngenheiroService {
         if (!engenheiroRepository.existsById(id)) {
             throw new RecursoNaoEncontradoException("Engenheiro não encontrado com o ID: " + id);
         }
+
+        long totalInspecoes = inspecaoRepository.countByEngenheiroId(id);
+        if (totalInspecoes > 0) {
+            throw new RegraDeNegocioException(
+                    "Não é possível excluir este engenheiro pois ele possui " + totalInspecoes
+                            + " inspeção(ões) de campo registrada(s).");
+        }
+
         engenheiroRepository.deleteById(id);
     }
 }

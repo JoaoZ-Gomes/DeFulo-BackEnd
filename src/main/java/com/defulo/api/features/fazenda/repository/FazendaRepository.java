@@ -19,6 +19,9 @@ public interface FazendaRepository extends JpaRepository<Fazenda, Long> {
     /** Verifica se o produtor já tem uma fazenda com o mesmo nome. */
     boolean existsByNomeAndProdutorId(String nome, Long produtorId);
 
+    /** Conta quantas fazendas um produtor possui — usado para bloquear exclusão com dependentes. */
+    long countByProdutorId(Long produtorId);
+
     /** Lista fazendas modificadas após um determinado momento (para pull sync incremental). */
     List<Fazenda> findByDataAtualizacaoAfter(LocalDateTime since);
 }

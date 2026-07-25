@@ -1,7 +1,9 @@
 package com.defulo.api.features.talhao.service;
 
+import com.defulo.api.features.evento.repository.EventoRepository;
 import com.defulo.api.features.fazenda.model.Fazenda;
 import com.defulo.api.features.fazenda.repository.FazendaRepository;
+import com.defulo.api.features.inspecao.repository.InspecaoRepository;
 import com.defulo.api.features.talhao.dto.request.TalhaoCreateRequestDTO;
 import com.defulo.api.features.talhao.dto.request.TalhaoUpdateRequestDTO;
 import com.defulo.api.features.talhao.dto.response.TalhaoResponseDTO;
@@ -26,6 +28,8 @@ public class TalhaoService {
 
     private final TalhaoRepository talhaoRepository;
     private final FazendaRepository fazendaRepository;
+    private final EventoRepository eventoRepository;
+    private final InspecaoRepository inspecaoRepository;
     private final TalhaoMapper mapper;
     private final AuthorizationService authorizationService;
 
@@ -110,6 +114,16 @@ public class TalhaoService {
 
         Talhao talhao = buscarEntidade(id);
         authorizationService.exigirAcessoATalhao(talhao);
+
+        long totalEventos = eventoRepository.countByTalhaoId(id);
+        long totalInspecoes = inspecaoRepository.countByTalhaoId(id);
+        if (totalEventos > 0 || totalInspecoes > 0) {
+            throw new RegraDeNegocioException(
+                    "Não é possível excluir este talhão pois ele possui " + totalEventos
+                            + " evento(s) de manejo e " + totalInspecoes
+                            + " inspeção(ões) registrados.");
+        }
+
         talhaoRepository.delete(talhao);
     }
 

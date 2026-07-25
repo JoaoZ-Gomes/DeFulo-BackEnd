@@ -8,6 +8,7 @@ import com.defulo.api.features.fazenda.model.Fazenda;
 import com.defulo.api.features.fazenda.repository.FazendaRepository;
 import com.defulo.api.features.produtor.model.Produtor;
 import com.defulo.api.features.produtor.repository.ProdutorRepository;
+import com.defulo.api.features.talhao.repository.TalhaoRepository;
 import com.defulo.api.features.usuario.model.Perfil;
 import com.defulo.api.features.usuario.model.Usuario;
 import com.defulo.api.infrastructure.exception.RecursoNaoEncontradoException;
@@ -28,6 +29,7 @@ public class FazendaService {
 
     private final FazendaRepository fazendaRepository;
     private final ProdutorRepository produtorRepository;
+    private final TalhaoRepository talhaoRepository;
     private final FazendaMapper mapper;
     private final AuthorizationService authorizationService;
 
@@ -115,6 +117,14 @@ public class FazendaService {
 
         Fazenda fazenda = buscarEntidade(id);
         authorizationService.exigirAcessoAFazenda(fazenda);
+
+        long totalTalhoes = talhaoRepository.countByFazendaId(id);
+        if (totalTalhoes > 0) {
+            throw new RegraDeNegocioException(
+                    "Não é possível excluir esta fazenda pois ela possui " + totalTalhoes
+                            + " talhão(ões) cadastrado(s). Exclua os talhões primeiro.");
+        }
+
         fazendaRepository.delete(fazenda);
     }
 
