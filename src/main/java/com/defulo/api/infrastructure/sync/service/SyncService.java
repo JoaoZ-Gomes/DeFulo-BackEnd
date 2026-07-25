@@ -10,6 +10,7 @@ import com.defulo.api.features.produtor.repository.ProdutorRepository;
 import com.defulo.api.features.talhao.model.Talhao;
 import com.defulo.api.features.talhao.repository.TalhaoRepository;
 import com.defulo.api.infrastructure.exception.RecursoNaoEncontradoException;
+import com.defulo.api.infrastructure.exception.RegraDeNegocioException;
 import com.defulo.api.infrastructure.sync.dto.*;
 import com.defulo.api.infrastructure.sync.model.SyncIdMapping;
 import com.defulo.api.infrastructure.sync.repository.SyncIdMappingRepository;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -183,8 +185,14 @@ public class SyncService {
         Produtor produtor = produtorRepository.findById(produtorId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Produtor não encontrado: " + produtorId));
 
+        String nome = getString(payload, "nome");
+        if (fazendaRepository.existsByNomeAndProdutorId(nome, produtorId)) {
+            throw new RegraDeNegocioException(
+                    "Este produtor já possui uma fazenda com o nome: '" + nome + "'.");
+        }
+
         Fazenda fazenda = new Fazenda();
-        fazenda.setNome(getString(payload, "nome"));
+        fazenda.setNome(nome);
         fazenda.setAreaTotal(getBigDecimal(payload, "areaTotal"));
         fazenda.setCultura(getString(payload, "cultura"));
         fazenda.setProdutor(produtor);
@@ -198,8 +206,14 @@ public class SyncService {
         Fazenda fazenda = fazendaRepository.findById(fazendaId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Fazenda não encontrada: " + fazendaId));
 
+        String numero = getString(payload, "numero");
+        if (talhaoRepository.existsByNumeroAndFazendaId(numero, fazendaId)) {
+            throw new RegraDeNegocioException(
+                    "Já existe um talhão com o número '" + numero + "' nesta fazenda.");
+        }
+
         Talhao talhao = new Talhao();
-        talhao.setNumero(getString(payload, "numero"));
+        talhao.setNumero(numero);
         talhao.setArea(getDouble(payload, "area"));
         talhao.setCultura(getString(payload, "cultura"));
         talhao.setFazenda(fazenda);
@@ -219,7 +233,10 @@ public class SyncService {
         evento.setNome(getString(payload, "nome"));
         evento.setDescricao(getString(payload, "descricao"));
         evento.setTipo(TipoEvento.valueOf(getString(payload, "tipo")));
-        evento.setData(LocalDateTime.now());
+        // Usa a data real em que o evento ocorreu no dispositivo (registrada offline);
+        // só cai para "agora" se o payload não trouxer a data (ex: entrada legada).
+        LocalDateTime dataEvento = getLocalDateTime(payload, "data");
+        evento.setData(dataEvento != null ? dataEvento : LocalDateTime.now());
         evento.setTalhao(talhao);
         if (payload.get("quantidadeValor") != null) {
             evento.setQuantidadeValor(getDouble(payload, "quantidadeValor"));
@@ -283,14 +300,27 @@ public class SyncService {
 
     // ─── DELETE ────────────────────────────────────────────────────────────────
 
+    /**
+     * DELETE é tratado como idempotente: se o registro já não existe (ex: reenvio
+     * após a resposta do primeiro DELETE se perder na rede), não é erro — o estado
+     * desejado ("não existir mais") já foi alcançado.
+     */
     private void executeDelete(String entityType, Map<String, Object> payload, String localId, String deviceId) {
         log.info("DELETE {} | localId={}", entityType, localId);
         Long id = getLong(payload, "id");
         switch (entityType) {
-            case ENTITY_FAZENDA -> fazendaRepository.deleteById(id);
-            case ENTITY_TALHAO  -> talhaoRepository.deleteById(id);
-            case ENTITY_EVENTO  -> eventoRepository.deleteById(id);
+            case ENTITY_FAZENDA -> deleteSeExistir(fazendaRepository, id, entityType);
+            case ENTITY_TALHAO  -> deleteSeExistir(talhaoRepository, id, entityType);
+            case ENTITY_EVENTO  -> deleteSeExistir(eventoRepository, id, entityType);
             default -> throw new IllegalArgumentException("Tipo de entidade desconhecido para DELETE: " + entityType);
+        }
+    }
+
+    private void deleteSeExistir(org.springframework.data.repository.CrudRepository<?, Long> repository, Long id, String entityType) {
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+        } else {
+            log.debug("{} {} já não existe — DELETE idempotente, tratado como sucesso", entityType, id);
         }
     }
 
@@ -416,10 +446,9 @@ public class SyncService {
         SyncStatusDTO status = new SyncStatusDTO();
         status.setDeviceId(deviceId);
 
-        // Buscar o registro mais recente deste dispositivo
-        syncIdMappingRepository.findAll().stream()
-                .filter(m -> deviceId.equals(m.getDeviceId()))
-                .max(Comparator.comparing(SyncIdMapping::getCriadoEm))
+        // Busca o registro mais recente deste dispositivo via query indexada
+        // (evita carregar toda a tabela sync_id_mapping em memória a cada consulta).
+        syncIdMappingRepository.findFirstByDeviceIdOrderByCriadoEmDesc(deviceId)
                 .ifPresentOrElse(
                     latest -> {
                         status.setLastSyncId(latest.getSyncId());
@@ -497,5 +526,16 @@ public class SyncService {
     private java.math.BigDecimal getBigDecimal(Map<String, Object> payload, String key) {
         Double val = getDouble(payload, key);
         return val != null ? java.math.BigDecimal.valueOf(val) : null;
+    }
+
+    private LocalDateTime getLocalDateTime(Map<String, Object> payload, String key) {
+        Object val = payload.get(key);
+        if (val == null) return null;
+        String texto = val.toString();
+        try {
+            return OffsetDateTime.parse(texto).toLocalDateTime();
+        } catch (DateTimeParseException e) {
+            return LocalDateTime.parse(texto);
+        }
     }
 }
